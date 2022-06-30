@@ -1,0 +1,63 @@
+---
+- hosts: all
+  gather_facts: yes
+  become: true
+
+  tasks:
+  - name: install apache2 package
+    ansible.builtin.apt:
+      name: apache2
+      state : present
+    
+  - name: enabled apache2 service
+    ansible.builtin.service:
+      name: apache2
+      state : started
+      
+  - name: create the ubuntu sub directory
+    ansible.builtin.file:
+      path: '/var/www/html/ubuntu'
+      state: directory
+      owner: www-data
+      group: www-data
+      
+  - name: install apt-mirror package
+    ansible.builtin.apt:
+      name: apt-mirror
+      state : present
+    
+  - name: update all packages to their latest version
+    ansible.builtin.apt:
+      name: "*"
+      state: latest
+
+  - name: make a backup copy of the mirror.list configuration file
+    ansible.builtin.file:
+      src: '/etc/apt/mirror.list'
+      dest: '/etc/apt/mirror.list.org'
+      state: hard
+
+  - name: change the base_path to the default document root
+    ansible.builtin.lineinfile:
+      path: '/etc/apt/mirror.list'
+      regexp: '#'
+      line: ' set base_path     /var/www/html/ubuntu'
+      backup: yes
+
+  - name: create the ubuntu sub directory
+    ansible.builtin.file:
+      path: '/var/www/html/ubuntu/var/'
+      state: directory
+      owner: root
+      group: root
+
+  - name: copy a script into /var/www/html/ubuntu/var/
+    ansible.builtin.file:
+      src: '/var/spool/apt-mirror/var/postmirror.sh'
+      dest: '/var/www/html/ubuntu/var/postmirror.sh'
+      state: hard
+
+  - name: mirroring the selected repostiories locally on the server
+    ansible.builtin.shell: |
+            apt-mirror
+
