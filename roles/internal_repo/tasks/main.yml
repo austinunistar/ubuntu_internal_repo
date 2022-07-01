@@ -1,9 +1,4 @@
 ---
-- hosts: all
-  gather_facts: yes
-  become: true
-
-  tasks:
   - name: install apache2 package
     ansible.builtin.apt:
       name: apache2
@@ -36,20 +31,23 @@
       src: '/etc/apt/mirror.list'
       dest: '/etc/apt/mirror.list.org'
       state: hard
+    ignore_errors: yes
 
   - name: change the base_path to the default document root
-    ansible.builtin.lineinfile:
-      path: '/etc/apt/mirror.list'
-      regexp: '#'
-      line: ' set base_path     /var/www/html/ubuntu'
+    ansible.builtin.template:
+      src: 'mirror.list.j2'
+      dest: '/etc/apt/mirror.list'
+      owner: 'root'
+      group: 'root'
+      mode: '0644'
       backup: yes
 
   - name: create the ubuntu sub directory
     ansible.builtin.file:
       path: '/var/www/html/ubuntu/var/'
-      state: directory
-      owner: root
-      group: root
+      state: 'directory'
+      owner: 'root'
+      group: 'root'
 
   - name: copy a script into /var/www/html/ubuntu/var/
     ansible.builtin.file:
