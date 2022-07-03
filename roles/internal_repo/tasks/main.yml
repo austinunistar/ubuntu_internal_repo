@@ -59,3 +59,11 @@
     ansible.builtin.shell: |
             apt-mirror
 
+            #  - name: disable automatic updates
+            #    ansible.builtin.replace:
+            #      path: '/etc/apt/apt.conf.d/20auto-upgrades'
+            #      regexp: APT::Periodic::Update-Package-Lists "1";
+            #      replace: APT::Periodic::Update-Package-Lists "0";
+            #      backup: yes
+            #    tags: disable_auto_updates
+
