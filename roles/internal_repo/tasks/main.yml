@@ -32,15 +32,34 @@
       dest: '/etc/apt/mirror.list.org'
       state: hard
     ignore_errors: yes
+    tags: mirror_list_update
+
+  - name: Distribution major version
+    debug: 
+      msg: "{{ ansible_distribution_major_version }}"
+    tags: mirror_list_update
 
   - name: change the base_path to the default document root
     ansible.builtin.template:
-      src: 'mirror.list.j2'
+      src: 'mirror.list.18.j2'
       dest: '/etc/apt/mirror.list'
       owner: 'root'
       group: 'root'
       mode: '0644'
       backup: yes
+    when: ansible_distribution_major_version == '18'
+    tags: mirror_list_update
+
+  - name: change the base_path to the default document root
+    ansible.builtin.template:
+      src: 'mirror.list.2x.j2'
+      dest: '/etc/apt/mirror.list'
+      owner: 'root'
+      group: 'root'
+      mode: '0644'
+      backup: yes
+    when: ansible_distribution_major_version != '18'
+    tags: mirror_list_update
 
   - name: create the ubuntu sub directory
     ansible.builtin.file:
@@ -55,15 +74,20 @@
       dest: '/var/www/html/ubuntu/var/postmirror.sh'
       state: hard
 
-  - name: mirroring the selected repostiories locally on the server
+  - name: collect all packages to their version
     ansible.builtin.shell: |
-            apt-mirror
-
-            #  - name: disable automatic updates
-            #    ansible.builtin.replace:
-            #      path: '/etc/apt/apt.conf.d/20auto-upgrades'
-            #      regexp: APT::Periodic::Update-Package-Lists "1";
-            #      replace: APT::Periodic::Update-Package-Lists "0";
-            #      backup: yes
-            #    tags: disable_auto_updates
+            dpkg -l > /tmp/pkg_version.txt
+    tags: pkg_version_collect
+  - 
+      #  - name: mirroring the selected repostiories locally on the server
+      #    ansible.builtin.shell: |
+      #            apt-mirror
+      #
+      #  - name: disable automatic updates
+      #    ansible.builtin.replace:
+      #      path: '/etc/apt/apt.conf.d/20auto-upgrades'
+      #      regexp: APT::Periodic::Update-Package-Lists "1";
+      #      replace: APT::Periodic::Update-Package-Lists "0";
+      #      backup: yes
+      #    tags: disable_auto_updates
 
