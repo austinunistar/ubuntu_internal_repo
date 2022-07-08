@@ -36,7 +36,7 @@
 
   - name: collect all packages to their version
     ansible.builtin.shell: |
-            dpkg -l | awk '{print $2 "," $3}' | sed -e '1,3d' | sed -e '2d' >> /tmp/test.csv
+            dpkg -l | awk '{print $2 "," $3}' | sed -e '1,3d' | sed -e '2d' > /tmp/pkg_list.csv
     tags: pkg_version_collect
 
       #  - name: disable automatic updates
