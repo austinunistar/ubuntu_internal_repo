@@ -4,6 +4,7 @@
       src: '/etc/apt/mirror.list'
       dest: '/etc/apt/mirror.list.org'
       state: hard
+      remote_src: true
     ignore_errors: yes
     tags: mirror_list_update
 
@@ -39,11 +40,26 @@
             dpkg -l | awk '{print $2 "," $3}' | sed -e '1,3d' | sed -e '2d' > /tmp/pkg_list.csv
     tags: pkg_version_collect
 
-      #  - name: disable automatic updates
-      #    ansible.builtin.replace:
-      #      path: '/etc/apt/apt.conf.d/20auto-upgrades'
-      #      regexp: APT::Periodic::Update-Package-Lists "1";
-      #      replace: APT::Periodic::Update-Package-Lists "0";
-      #      backup: yes
-      #    tags: disable_auto_updates
+  - name: create a white list file
+    ansible.builtin.template:
+      src: 'white_list.j2'
+      dest: '/tmp/white_list.csv'
+      owner: 'root'
+      group: 'root'
+      mode: '0644'
+      backup: yes
+    tags: white_list_create
+
+  - name: Compare package version between white list and pkg list
+    ansible.builtin.shell: |
+            grep -vf /tmp/pkg_list.csv /tmp/white_list.csv > /tmp/unmatch_list.csv
+    tags: pkg_compare
+
+  - name: disable automatic updates
+    ansible.builtin.replace:
+      path: '/etc/apt/apt.conf.d/20auto-upgrades'
+      regexp: APT::Periodic::Update-Package-Lists "1";
+      replace: APT::Periodic::Update-Package-Lists "0";
+      backup: yes
+    tags: disable_auto_updates
 
